@@ -3,7 +3,7 @@ Utilities, links, and information on writing performant, safe code in the Bash s
 
 # Overview
 
-This repository contains things useful for someone programming [Bash]() at scale. The phrases "Bash at scale" and "Bash codebase" are phrases that I have the unfortunate privilege of uttering (unironically) daily.
+This repository contains things useful for someone programming [Bash](https://tiswww.case.edu/php/chet/bash/bash-intro.html) at scale. "Bash at scale" and "Bash codebase" are phrases that I have the unfortunate privilege of uttering (unironically) daily.
 
 This repository will eventually contain snippets of production-ready Bash code* that I and my colleagues have found useful.
 
@@ -19,4 +19,4 @@ Please file bugs on/send pull requests to [this GitHub repository](https://githu
 
 
 
-* Shit, there's another one that'll go on my gravestone.
+ * Shit, there's another one that'll go on my gravestone.
