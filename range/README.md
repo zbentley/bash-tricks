@@ -2,7 +2,9 @@
 
 ## Overview
 
-`range.bash` contains polyfill-like functions that allow [Bash](https://tiswww.case.edu/php/chet/bash/bash-intro.html) `{1..10}`-style ranges to contain variables. In regular Bash, ranges are expanded before variable interpolation, so `for i in {$foo..$bar}` doesn't work. These functions make that possible, with a few limitations.
+`range.bash` contains polyfill-like functions that improve on [Bash](https://tiswww.case.edu/php/chet/bash/bash-intro.html) `{1..10}`-style ranges (aka [sequence expressions](https://www.gnu.org/software/bash/manual/html_node/Brace-Expansion.html)). These functions allow the detection of invalid ranges, and allow ranges to contain variables.
+
+In regular Bash, ranges are expanded before variable interpolation, so `for i in {$foo..$bar}` doesn't work. These functions make that possible, with a few limitations.
 
 ## Examples
 
@@ -26,16 +28,17 @@ for i in {1..10}; do echo $i; done
 rangeifs {$one..$ten}
 ```
 
-Output can be looped over with or without subshells. The following calls to `f()` are equivalent:
+Output can be looped over with or without subshells (see the "Subshells" section for more info). The following calls to `myfunc()` are equivalent:
 
 ```bash
-function f() { echo $1; }
+function myfunc() { echo $1; }
 one=1 ten=10
 
-for i in {1..10}; do echo $i; done
-for i in $(range {$one..$ten}); do echo $i; done
-rangefunc f {$one..$ten}
+for i in {1..10}; do myfunc $i; done
+for i in $(range {$one..$ten}); do myfunc $i; done
+rangefunc myfunc {$one..$ten}
 ```
+
 ## Errors
 
 Unlike Bash's built-in ranges, functions in this file will report errors when given invalid (according to Bash) ranges. `for i in {a..0}; do something_scary $i; done` will happily supply the value "`{a..0}`" verbatim to `something_scary`; `for i in $(range {a..0}); do something_scary $i; done` will error instead; so will `rangefunc something_scary {a..0}`
@@ -60,17 +63,19 @@ This function outputs (to STDOUT) a _space-separated_ range of words as specifie
 
 This function reports an error (prints an error message to STDERR, prints nothing to STDOUT, and returns a nonzero value) if the supplied arguments are invalid _or_ if the supplied range is invalid according to Bash's rules for ranges. For example, `range {A..z}` is valid, but `range {a..0}` is not. This is determined by Bash, not this function.
 
-Ranges will be "combined" by Bash where possible (see the "Limitations" section for more info). However, if you are using subshells, be aware that ranges combined across a subshell boundary may not produce the result you expect. For example, try `one=1; echo $(range {$one..10}){a..f}`.
+Ranges will be "combined" by Bash where possible, so behavior like `{$one..10}{a..z}` is possible, but requires all brace expressions after the first one to be quoted. See the "Limitations" section for more info.
 
 ### `rangeifs ARGS`
 
-This function works exactly like the `range` function, except its output is delimited by the value of the [`$IFS` pseudovariable](https://bash.cyberciti.biz/guide/$IFS) instead of spaces.
+This function works exactly like the `range` function, except its output is delimited by the separator derived from the [`$IFS` pseudovariable](https://bash.cyberciti.biz/guide/$IFS) instead of spaces.
+
+Native Bash ranges are _not_ delimited by IFS: if you want one number per line, `IFS=$'\n' rangeifs {1..10}` will not work, you'll need a loop. `IFS=$'\n' rangeifs {1..10}` will work as expected.
 
 For example, `IFS= rangeifs 1..10` results in `12345678910`, and `IFS=_ rangeifs {1..10}` results in `1_2_3_4_5_6_7_8_9_10`.
 
-All elements of the range will be in the output, even if those elements are delimiters in `IFS`: `IFS=a rangeifs {a..f}` works.
+All elements of the range will be in the output, even if those elements are delimiters in `$IFS`: `IFS=a rangeifs {a..c}` prints `aabac`.
 
-The arguments to this function are handled exactly as they are for `range`, and errors are emitted for the same conditions.
+`ARGS` handling and error conditions behave exactly the same as they do for `range`.
 
 Be aware that [*`IFS` is tricky*](http://mywiki.wooledge.org/BashSheet#Special_Parameters). It is not a delimiter; it is a list of possible delimiters. The behaviors of `IFS=abc rangeifs {1..5}`, ``IFS="\n" rangeifs {1..5}`, and `IFS=$'\n' rangeifs {1..5}` illustrate this. See the "Limitations" section for more info.
 
@@ -116,7 +121,9 @@ No environment variables are read or written by any functions in this file.
 
 The goal of these functions is to emulate as much of the native bash range behavior as possible without compromising performance, compatibility, or usability. Not all capabilities of the built-in bash ranges are available. For example, nested ranges like `{{a..z},{1..10}}` cannot be emulated with these functions.
 
-Adjacent "combination" ranges (i.e. `{1..10}{a..z}` generating `1a 1b 1c ...` etc.) work, provided that only the _first_ combined range contains variables or things that Bash wouldn't natively expand: given `a=0`, `range {$a..10}{a..z}` works, but `range {a..z}{$a..10}` does not; neither does `range {$a..10}{10..$a}`.
+Adjacent "combination" ranges (i.e. `{1..10}{a..z}` generating `1a 1b 1c ...` etc.) will work, if all ranges after the first are enclosed in quotes, and only the _first_ combined range contains variables or things that Bash wouldn't natively expand. `one=1 range {$one..10}{a..f}` doesnt' do what you expect, but `range {$one..10}'{a..f}'` does.
+
+If you are using subshells, be aware that ranges combined across a subshell boundary may not produce the result you expect. For example, try `one=1; echo $(range {$one..10}){a..f}`.
 
 [Word splitting](http://mywiki.wooledge.org/WordSplitting) may cause the `range` function to do unexpected things in the presence of `IFS` contents which contain data in the range. For example, `IFS=abc first=a; range {$first..z}` results in an error. To prevent such errors, quote some or all of the arguments to `range`. `range "{$first..z}"`, `range "$first" z`, and `range {"$first"..z}` will all work. This behavior isn't related to `range` itself; it applies to the rest of Bash as well; `IFS=abc first=a; echo {$first..z}` illustrates this.
 
