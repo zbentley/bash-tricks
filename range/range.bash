@@ -28,14 +28,15 @@
 # More info/documentation: https://github.com/zbentley/bash-tricks/range/
 function range {
 	if [[ -n "${3:-}" ]]; then
-		_zblocal_f_rangeoutput $@
+		_zblocal_f_rangeoutput "$@"
 	else
 		local from to range elt
-		declare -a rv
+		declare -a rv # Local by default
+		
 		from="${1:-}"
 		if [[ "${from}" =~ ^(.+)[.][.](.+)$ ]]; then
 			if [[ -n "${2:-}" ]]; then
-				echo "Unexpected second argument. Arguments: '${1:-}', '${2:-}'." 1>&2
+				_zblocal_f_errorf "Unexpected second argument. Arguments: '${1:-}', '${2:-}'."
 				return 1
 			fi
 			from="${BASH_REMATCH[1]}"
@@ -45,10 +46,10 @@ function range {
 		fi
 
 		range="{${from#\{}..${to%\}}}"
+		eval "for elt in $range;"' do rv+=("$elt"); done'
 
-		eval "for elt in $range;"' do rv+=($elt); done'
 		if [[ "${rv[0]}" == "$range" ]]; then
-			echo "Could not calculate range '${range}'. Arguments: '${1:-}', '${2:-}'." 1>&2
+			_zblocal_f_errorf "Could not calculate range '${range}'. Arguments: '${1:-}', '${2:-}'."
 			return 1
 		else
 			_zblocal_f_rangeoutput "${rv[@]}"
@@ -56,22 +57,26 @@ function range {
 	fi
 }
 
+function _zblocal_f_errorf {
+	echo "${BASH_SOURCE[0]:-}: ${FUNCNAME[1]:-}() line ${BASH_LINENO[0]:-?}: ${1:-}" >&2
+}
+
 function rangeifs {
 	local _zblocal_useifs=1
-	range $@
+	range "$@"
 }
 
 function rangefunc {
 	declare -F "${1:-}" > /dev/null
 
 	if [[ $? -gt 0 ]]; then
-		echo "Requires a function argument; '${1:-}' is not a function." 1>&2
+		_zblocal_f_errorf "Requires a function argument; '${1:-}' is not a function."
 		return 1
 	else
 		local _zblocal_usefunc
 		_zblocal_usefunc="$1"
 		shift
-		range $@
+		range "$@"
 	fi
 }
 
@@ -83,6 +88,7 @@ function _zblocal_f_rangeoutput {
 			$_zblocal_usefunc "$arg"
 		done
 	else
+		IFS=
 		echo "$@"
 	fi
 }
