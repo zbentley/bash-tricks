@@ -1,23 +1,50 @@
-# Range
+# `range.bash`
+
+## Overview
 
 `range.bash` contains polyfill-like functions that allow [Bash](https://tiswww.case.edu/php/chet/bash/bash-intro.html) `{1..10}`-style ranges to contain variables. In regular Bash, ranges are expanded before variable interpolation, so `for i in {$foo..$bar}` doesn't work. These functions make that possible, with a few limitations.
 
-To illustrate the usefulness of these functions, consider that the following `echo` statements are all equivalent:
+## Examples
+
+The following `echo` statements are all equivalent:
 
 ```bash
-source range.bash
+one=1 ten=10 
 
 echo {1..10}
 range {1..10}
-one=1 range {$one..10}
-one=1 ten=10 range {$one..$ten}
+range {$one..10}
+range {$one..$ten}
 ```
 
-These functions also report errors when given invalid (according to Bash) ranges. `for i in {a..0}; do something_scary $i; done` will happily supply the value "`{a..0}`" verbatim to `something_scary`; `for i in $(range {a..0}); do something_scary $i; done` will error instead.
+Output can be formatted via `IFS`. The following are equivalent:
+
+```bash
+one=1 ten=10 IFS=$'\n'
+
+for i in {1..10}; do echo $i; done
+rangeifs {$one..$ten}
+```
+
+Output can be looped over with or without subshells. The following calls to `f()` are equivalent:
+
+```bash
+function f() { echo $1; }
+one=1 ten=10
+
+for i in {1..10}; do echo $i; done
+for i in $(range {$one..$ten}); do echo $i; done
+rangefunc f {$one..$ten}
+```
+## Errors
+
+Unlike Bash's built-in ranges, functions in this file will report errors when given invalid (according to Bash) ranges. `for i in {a..0}; do something_scary $i; done` will happily supply the value "`{a..0}`" verbatim to `something_scary`; `for i in $(range {a..0}); do something_scary $i; done` will error instead; so will `rangefunc something_scary {a..0}`
 
 # Usage
 
-The `range.bash` file defines the following public functions:
+The `range.bash` file defines three public functions: `range`, `rangeifs`, and `rangefunc`.
+
+To use these functions, download `range.bash` and do `source range.bash`.
 
 ### `range ARGS`
 
