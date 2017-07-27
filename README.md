@@ -19,4 +19,4 @@ Please file bugs on/send pull requests to [this GitHub repository](https://githu
 
 
 
- * Shit, there's another one that'll go on my gravestone.
+\* Shit, there's another one that'll go on my gravestone.
