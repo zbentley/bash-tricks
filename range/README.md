@@ -63,7 +63,7 @@ This function outputs (to STDOUT) a _space-separated_ range of words as specifie
 
 This function reports an error (prints an error message to STDERR, prints nothing to STDOUT, and returns a nonzero value) if the supplied arguments are invalid _or_ if the supplied range is invalid according to Bash's rules for ranges. For example, `range {A..z}` is valid, but `range {a..0}` is not. This is determined by Bash, not this function.
 
-Ranges will be "combined" by Bash where possible, so behavior like `{$one..10}{a..z}` is possible, but requires all brace expressions after the first one to be quoted. See the "Limitations" section for more info.
+Ranges will be "combined" by Bash where possible, so behavior like `{$one..10}{a..z}` is possible, but requires all brace expressions after the first one to be quoted. See the "Limitations" section for more info.g
 
 ### `rangeifs ARGS`
 
@@ -132,6 +132,7 @@ If you are using subshells, be aware that ranges combined across a subshell boun
 This should be enhanced with:
 
 - Thorough automated tests.
+- Check/document compatibility with `-oposix`.
 - The ability to extend the range syntax, optionally, to encompass `a..0` xor `0..a`.
 - `rangefunc` should conserve memory as much as possible. At present it allocates the full range as a string, which may be incompatible with some environments' assumptions.
 - CONTRIBUTING guidelines.
