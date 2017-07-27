@@ -88,7 +88,6 @@ function _zblocal_f_rangeoutput {
 			$_zblocal_usefunc "$arg"
 		done
 	else
-		IFS=
 		echo "$@"
 	fi
 }
