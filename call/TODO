@@ -1,0 +1,7 @@
+# Global state items:
+# - Env variables
+# - Regular variables
+# - Trap states
+# - Shell options
+# - Exit codes?
+# - Return values
