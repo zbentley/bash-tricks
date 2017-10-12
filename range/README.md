@@ -8,7 +8,7 @@ In regular Bash, ranges are expanded before variable interpolation, so `for i in
 
 ## Examples
 
-The following `echo` statements are all equivalent:
+The following statements are all equivalent:
 
 ```bash
 one=1 ten=10 
@@ -77,17 +77,24 @@ All elements of the range will be in the output, even if those elements are deli
 
 `ARGS` handling and error conditions behave exactly the same as they do for `range`.
 
-Be aware that [*`IFS` is tricky*](http://mywiki.wooledge.org/BashSheet#Special_Parameters). It is not a delimiter; it is a list of possible delimiters. The behaviors of `IFS=abc rangeifs {1..5}`, ``IFS="\n" rangeifs {1..5}`, and `IFS=$'\n' rangeifs {1..5}` illustrate this. See the "Limitations" section for more info.
+Be aware that [*`IFS` is tricky*](http://mywiki.wooledge.org/BashSheet#Special_Parameters). It is not a delimiter; it is a list of possible delimiters. The behaviors of the following statements illustrate these pitfalls:
+```
+IFS=abc rangeifs {1..5}
+IFS="\n" rangeifs {1..5}
+IFS=$'\n' rangeifs {1..5}
+```
+
+See the "Limitations" section for more info.
 
 ### `rangefunc FUNC ARGS`
 
 This function generates a range from `ARGS`, and then calls the supplied Bash (or shell) function `FUNC` once for each element in that range.
 
-Ranges are generated from `ARGS` by the same rules used for the `range` function, so `rangefunc myFunction $foo $bar`, `rangefunc myFunction {1..10}`, and `rangefunc myFunction {$foo..10}` are all valid inputs, provided the variables they contain are valid.
+Ranges are generated from `ARGS` by the same rules used for the `range` function, so `rangefunc myFunction $foo $bar`, `rangefunc myFunction {1..10}`, and `rangefunc myFunction {$foo..10}` are all valid inputs, provided the variables they contain are valid range components.
 
 `rangefunc` will report an error if its first argument is not a function defined in the current shell: `f() { echo $1; }; rangefunc f 1..10` will work, but `rangefunc notDefined 1..10` will raise an error (print to STDERR, print nothing to STDOUT, and return a nonzero status).
 
-`FUNC` will be called with a single defined argument (i.e. a `$1` doesn't violate `set -u`, so no need for `"${1:-}"`). `FUNC` will be called with results of the `range` function applied to `ARGS`, _not_ with elements of the range _combined_ from `range ARGS` and any adjacent ranges. In other words, ` a=2; f() { echo -n "$1 "; }; rangefunc f {1..$a}{a..b}` results in `1a 1b 2a 2b`.
+`FUNC` will be called with a single defined argument (i.e. a `$1` which will never violate `set -u`, so no need for `"${1:-}"`). `FUNC` will be called with results of the `range` function applied to `ARGS`, _not_ with elements of the range _combined_ from `range ARGS` and any adjacent ranges. In other words, ` a=2; f() { echo -n "$1 "; }; rangefunc f {1..$a}{a..b}` results in `1a 1b 2a 2b`.
 
 Many users find it semantically useful to `alias` `rangefunc` to `map`. The `map` keyword is not used by default due to its presence in other Bash libraries.
 
@@ -113,7 +120,7 @@ Spawning subshells, even to invoke built-in bash functions or simple programs li
 
 ## Global State
 
-Since Bash functions are global by default, functions with the same names as those documented for this file will conflict with  (overwrite or be overwritten by) the functions defined in this file. Additionally, any functions or globals whose names start with `_zblocal_` that are not created by code in [the source repository containing this file](https://github.com/zbentley/bash-tricks) may interfere with its behavior.
+Since Bash functions are global by default, functions with the same names as those documented for this file will conflict with  (overwrite or be overwritten by) the functions defined in this file. Additionally, any functions or globals whose names start with `_zblocal_` that are not created by code from [the source repository containing this file](https://github.com/zbentley/bash-tricks) may interfere with its behavior.
 
 No environment variables are read or written by any functions in this file.
 
