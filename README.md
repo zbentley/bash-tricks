@@ -7,7 +7,7 @@ This repository contains things useful for someone programming [Bash](https://ti
 
 This repository will eventually contain snippets of production-ready Bash code that I and my colleagues have found useful.
 
-# Organizatiion
+# Organization
 
 Each subfolder in this repository should contain a `README.md` document explaining its contents.
 

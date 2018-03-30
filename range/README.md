@@ -22,8 +22,6 @@ range {$one..$ten}
 Output can be formatted via `IFS`. The following are equivalent:
 
 ```bash
-one=1 ten=10 IFS=$'\n'
-
 for i in {1..10}; do echo $i; done
 rangeifs {$one..$ten}
 ```
@@ -31,7 +29,7 @@ rangeifs {$one..$ten}
 Output can be looped over with or without subshells (see the "Subshells" section for more info). The following calls to `myfunc()` are equivalent:
 
 ```bash
-function myfunc() { echo $1; }
+myfunc() { echo $1; }
 one=1 ten=10
 
 for i in {1..10}; do myfunc $i; done
@@ -41,7 +39,15 @@ rangefunc myfunc {$one..$ten}
 
 ## Errors
 
-Unlike Bash's built-in ranges, functions in this file will report errors when given invalid (according to Bash) ranges. `for i in {a..0}; do something_scary $i; done` will happily supply the value "`{a..0}`" verbatim to `something_scary`; `for i in $(range {a..0}); do something_scary $i; done` will error instead; so will `rangefunc something_scary {a..0}`
+Unlike Bash's built-in ranges, functions in this file will report errors when given invalid (according to Bash) ranges. For example, consider this loop:
+
+```bash
+for i in {a..0}; do
+	something_scary $i;
+done
+```
+
+Since the range from "a" to "0" is invalid, Bash will happily supply the value "`{a..0}`" verbatim to `something_scary`. This can cause unexpected or dangerous behavior. Looping over `$(range {a..0})`, or using `rangefunc` to invoke `something_scary` will error instead, protecting code from unexpected input patterns.
 
 # Usage
 
@@ -54,6 +60,8 @@ To use these functions, download `range.bash` and do `source range.bash`.
 This function outputs (to STDOUT) a _space-separated_ range of words as specified by `ARGS`.
 
 `ARGS` must be either one or two [word-separated](http://mywiki.wooledge.org/WordSplitting) arguments. Supplying more arguments than that will cause those arguments to be returned verbatim, as in the last case below.
+
+The value of `IFS` does not affect this function's behavior in any way.
 
 `ARGS` should be one of:
 
