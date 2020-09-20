@@ -6,11 +6,10 @@
 _zblocal_i_returnid=
 
 function _zblocal_f_getid() {
-    _zblocal_i_returnid=$("$@")
-    if [[ $? -ne 0 || -z $_zblocal_i_returnid ]]; then
+    if ! _zblocal_i_returnid=$("$@") || [[ -z "$_zblocal_i_returnid" ]]; then
         _zblocal_i_returnid=
-        echo "${BASH_SOURCE[0]:-}: ${FUNCNAME[1]:-}() line ${BASH_LINENO[0]:-?}: '$@' failed" >&2
-        return $?
+        echo "${BASH_SOURCE[0]:-}: ${FUNCNAME[1]:-}() line ${BASH_LINENO[0]:-?}: '$*' failed" >&2
+        return 1
     fi
 }
 
@@ -21,17 +20,15 @@ function _zblocal_f_get_euid() {
     # If we're asked for the current EUID and have the $EUID global variable,
     # check to make sure it's not exported. If it's exported, or if we don't
     # have it, probe using system commands.
-    if [[ -z $probe ]]; then
-        if [[ -z "${EUID:-}" ]]; then
-            probe=1
-        elif ! compgen -e -X '!EUID' >/dev/null; then
+    if [[ -z "$probe" ]]; then
+        if [[ -z "${EUID:-}" ]] || ! compgen -e -X '!EUID' >/dev/null; then
             probe=1
         fi
     fi
 
-    if [[ -n $probe ]]; then
+    if [[ -n "$probe" ]]; then
         # Return value will either be set or empty with a nonzero return code.
-        _zblocal_f_getid "id -u${first:+ $first}"
+        _zblocal_f_getid id -u ${first:+"$first"} # pass $first only if non-empty
     else
         _zblocal_i_returnid=$EUID
     fi
@@ -44,29 +41,25 @@ function _zblocal_f_get_ruid() {
     # If we're asked for the current UID and have the $UID global variable,
     # check to make sure it's not exported. If it's exported, or if we don't
     # have it, probe using system commands.
-    if [[ -z $probe ]]; then
-        if [[ -z "${UID:-}" ]]; then
-            probe=1
-        elif ! compgen -e -X '!UID' >/dev/null; then
+    if [[ -z "$probe" ]]; then
+        if [[ -z "${UID:-}" ]] || ! compgen -e -X '!UID' >/dev/null; then
             probe=1
         fi
     fi
 
-    if [[ -n $probe ]]; then
+    if [[ -n "$probe" ]]; then
         # Return value will either be set or empty with a nonzero return code.
-        _zblocal_f_getid "id -ru${first:+ $first}"
+        _zblocal_f_getid id -ru ${first:+"$first"} # pass $first only if non-empty
     else
         _zblocal_i_returnid=$UID
     fi
 }
 
 function get_uids() {
-    _zblocal_f_get_euid "$@"
-    [[ $? -ne 0 ]] && return $?
-    echo -n "$_zblocal_i_returnid "
+    _zblocal_f_get_euid "$@" || return
+    printf '%s ' "$_zblocal_i_returnid"
     _zblocal_i_returnid=
-    _zblocal_f_get_ruid "$@"
-    [[ $? -ne 0 ]] && return $?
-    echo $_zblocal_i_returnid
+    _zblocal_f_get_ruid "$@" || return
+    printf '%s\n' "$_zblocal_i_returnid"
     _zblocal_i_returnid=
 }
