@@ -7,3 +7,11 @@ cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
+demo/scratch
+scratch
+.idea/
+__pycache__/
+*.pyc
+.python-version
+*.egg-info
+.DS*
