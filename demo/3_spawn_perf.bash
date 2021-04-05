@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 exec 4>/dev/null
 
 time for i in {1..1000}; do echo foo>&4; done

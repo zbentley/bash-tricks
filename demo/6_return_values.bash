@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function do_something() {
   local variable=$(echo "the result of something complicated")
