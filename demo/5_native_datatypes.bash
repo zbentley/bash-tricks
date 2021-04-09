@@ -20,3 +20,28 @@ echo "$var"
 
 # But how do I check if it's defined or not?
 [ -v foo ] && echo THERE || echo NOT THERE
+
+
+# Arrays!
+a=(1 2 3)
+echo "$a"
+echo "${a[@]}"
+a+=(4 5 6)
+echo "${a[@]}"
+for i in "${a[@]}"; do
+  echo next
+  echo $i;
+done
+
+echo length "${#a[@]}"
+a[2]='foo'
+echo "${a[@]}"
+echo "${a[@]:3}"
+echo "${a[@]:3:2}"
+
+
+# Assertions! Prints to stderr and exits 1
+v=
+echo "${v:?Must set v}"
+v=1
+echo "${v:?Must set v}"

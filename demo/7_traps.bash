@@ -18,6 +18,12 @@ echo foo | grep bar
 echo baz
 
 #####
+trap "echo Cleaning up after error" ERR
+trap "echo Cleaning up" EXIT
+v=
+echo "${v:?Must set v}"
+
+#####
 trap "echo resetting state before command" DEBUG
 echo foo
 echo bar
