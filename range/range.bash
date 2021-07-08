@@ -30,8 +30,7 @@ function range {
 	if [[ -n "${3:-}" ]]; then
 		_zblocal_f_rangeoutput "$@"
 	else
-		local from to range elt
-		declare -a rv # Local by default
+		local from to range rv=()
 		
 		from="${1:-}"
 		if [[ "${from}" =~ ^(.+)[.][.](.+)$ ]]; then
@@ -46,7 +45,7 @@ function range {
 		fi
 
 		range="{${from#\{}..${to%\}}}"
-		eval "for elt in $range;"' do rv+=("$elt"); done'
+		eval "local elt; for elt in ${range};"' do rv+=("${elt}"); done'
 
 		if [[ "${rv[0]}" == "$range" ]]; then
 			_zblocal_f_errorf "Could not calculate range '${range}'. Arguments: '${1:-}', '${2:-}'."
@@ -67,9 +66,7 @@ function rangeifs {
 }
 
 function rangefunc {
-	declare -F "${1:-}" > /dev/null
-
-	if [[ $? -gt 0 ]]; then
+	if ! declare -F "${1:-}" > /dev/null; then
 		_zblocal_f_errorf "Requires a function argument; '${1:-}' is not a function."
 		return 1
 	else
@@ -85,7 +82,7 @@ function _zblocal_f_rangeoutput {
 		echo "$*"
 	elif [[ -n "${_zblocal_usefunc:-}" ]]; then
 		for arg; do
-			$_zblocal_usefunc "$arg"
+			"$_zblocal_usefunc" "$arg"
 		done
 	else
 		echo "$@"

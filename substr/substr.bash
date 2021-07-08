@@ -1,11 +1,13 @@
-_zb_substr() {
-    $_zb_local_polyfill input="${1:-}"
-    $_zb_local_polyfill len="${#input}"
-    $_zb_local_polyfill start="${2:-}"
-    $_zb_local_polyfill end="${3:-0}"
+# shellcheck disable=SC2034,SC2154
 
-    if [ "$start" -ge 0 ]; then
-        case $start in
+_zb_substr() {
+    "$_zb_local_polyfill" input="${1:-}"
+    "$_zb_local_polyfill" len="${#input}"
+    "$_zb_local_polyfill" start="${2:-}"
+    "$_zb_local_polyfill" end="${3:-0}"
+
+    if (( start >= 0 )); then
+        case "$start" in
             0*)
                 echo 'Usage: substr string start offset; start and offset must be numbers, start must be positive.' >&2
                 return 127 ;; 
@@ -15,7 +17,7 @@ _zb_substr() {
         return 127
     fi
 
-    if [ "$end" -eq $end ]; then
+    if (( end == end )); then
         # if [ $_zb_has_native ]; then
         #     printf %s "${input:$start:$end}"
         #     return $?
@@ -23,11 +25,11 @@ _zb_substr() {
         # If $end > len(input): end was negative and ended up before start.
         # If $end < 0: end was positive and beyond the end of the string.
         # Otherwise, it's in the string somewhere; compute the offset from the end.
-        case $end in
+        case "$end" in
             # A zero offset is kinda pointless, but you can do it if you want.
             0) ;;
             [1-9]*) end=$(( len < start + end ? 0 : len - start - end )) ;; 
-            [\-]*) end=$(( end * -1 )) ;;
+            -*) end=$(( end * -1 )) ;;
             *) 
                 echo 'Usage: substr string start offset; start and offset must be numbers, start must be positive.' >&2
                 return 127 ;;
@@ -37,24 +39,22 @@ _zb_substr() {
         return 127
     fi
 
-    while [ $start -gt 100 ]; do
-        eval "input=\"\${input#$_zb_nullcache_100}\""
+    while (( start > 100 )); do
+        eval "input=\"\${input#${_zb_nullcache_100}}\""
         start=$(( start - 100 ))
     done
 
     eval "start=\"\$_zb_nullcache_${start}\""
-    eval "input=\"\${input#$start}\""
+    eval "input=\"\${input#${start}}\""
 
-    if [ $end -gt 100 ]; then
-        eval "input=\"\${input%%$_zb_nullcache_100}\""
+    if ((  end > 100 )); then
+        eval "input=\"\${input%%${_zb_nullcache_100}}\""
         end=$(( end % 100 ))
     fi
 
     eval "end=\"\$_zb_nullcache_$end\""
     eval "input=\"\${input%$end}\""
     printf %s "$input"
-
-    return
 }
 
 _zb_setup() {
@@ -65,11 +65,9 @@ _zb_setup() {
     # Gotta use a subshell here since dash quits on a parse-failing eval.
     # Fortunately, it's the only subshell used and doesn't execute another
     # program.
-    if ( a="${_zb_local_polyfill:1:1}"; false ) >/dev/null 2>&1; then
-        true
-    else
-        $_zb_local_polyfill _zb_nullcache_size=""
-        while [ "${#_zb_nullcache_size}" -le 100 ]; do
+    if ! ( a="${_zb_local_polyfill:1:1}"; false ) >/dev/null 2>&1; then
+        "$_zb_local_polyfill" _zb_nullcache_size=""
+        while (( ${#_zb_nullcache_size} <= 100 )); do
             eval "_zb_nullcache_${#_zb_nullcache_size}='${_zb_nullcache_size}'"
             _zb_nullcache_size="${_zb_nullcache_size}?"
         done
